@@ -27,6 +27,8 @@ transporter.verify((error, info) => {
 //function to send email
 export const sendemail = async (to, subject, text, html) => {
     try {
+        console.time("Email Send");
+
         const info = await transporter.sendMail({
             from: `"To Do List" <${config.GOOGEL_USER}>`,
             to,
@@ -35,10 +37,12 @@ export const sendemail = async (to, subject, text, html) => {
             html,
         });
 
-        console.log("Message sent: %s", info.messageId);
-        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+        console.timeEnd("Email Send");
+
+        console.log("Message sent:", info.messageId);
+
         return info;
     } catch (error) {
         console.error("Error sending the message:", error);
     }
-}
+};
