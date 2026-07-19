@@ -38,6 +38,5 @@ export const sendemail = async (to, subject, text, html) => {
         return info;
     } catch (error) {
         console.error("Error sending the message:", error);
-        throw error;
     }
 }
