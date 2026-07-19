@@ -9,6 +9,7 @@ import config from "./config/config.js"
 const app = express()
 
 const allowedOrigins = [
+  config.FRONTEND_URL,
   "http://localhost:4173",
   "https://your-app.vercel.app"
 ];
