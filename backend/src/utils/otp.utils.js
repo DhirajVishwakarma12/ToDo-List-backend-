@@ -1,11 +1,7 @@
 import crypto from "crypto";
 
-export function generateotp(length = 6) {
-    let otp = "";
-    for (let i = 0; i < length; i++) {
-        otp += crypto.randomInt(0, 10).toString();
-    }
-    return otp;
+export function generateotp() {
+   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 export function getotphtml(otp, title = "Your OTP Code", message = "Use the following one-time password to complete your verification:") {
