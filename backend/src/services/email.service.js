@@ -4,6 +4,8 @@ import config from "../config/config.js"
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
+    pool: true,
+    maxConnections: 5,
     auth: {
         type: "oauth2",
         user: config.GOOGEL_USER,
