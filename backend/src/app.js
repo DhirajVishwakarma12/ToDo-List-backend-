@@ -25,9 +25,12 @@ app.use(cors({
   credentials: true
 }));
 
-app.get("/",(req ,res) =>{
-    message:"Server is live Now."
-})
+app.get("/", (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "Server is live now."
+    });
+});
 
 
 app.use(cookieParser())
