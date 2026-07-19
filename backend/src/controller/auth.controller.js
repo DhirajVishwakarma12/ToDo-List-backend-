@@ -33,10 +33,9 @@ export async function registerUser(req, res) {
     verified: false,
   });
 
-  //otp generate
+  // Generate OTP
   const otp = generateotp();
   const html = getotphtml(otp);
-
   const otphash = crypto.createHash("sha256").update(otp).digest("hex");
 
   const otpRecord = await OtpModel.create({
@@ -46,27 +45,26 @@ export async function registerUser(req, res) {
     expiresAt: new Date(Date.now() + 10 * 60 * 1000),
   });
 
-  try {
-    await sendemail(email, "OTP VERIFICATION", `Your otp is ${otp}`, html);
-
-    res.status(201).json({
-      message: `otp send to your these email: ${email}`,
-      newUser,
-      verified: newUser.verified,
-    });
-  } catch (error) {
-    await OtpModel.deleteOne({ _id: otpRecord._id });
-    return res.status(500).json({
-      message: "Failed to send OTP email.",
-      error: error.message,
-    });
-  }
-
+  // Send response immediately
   res.status(201).json({
-    message: "User registered successfully",
-    newUser,
+    message: `OTP is being sent to ${email}`,
     verified: newUser.verified,
   });
+
+  // Send email in background
+  sendemail(email, "OTP VERIFICATION", `Your OTP is ${otp}`, html)
+    .then(() => {
+      console.log("OTP email sent successfully");
+    })
+    .catch(async (error) => {
+      console.error("Failed to send OTP:", error);
+
+      // Delete OTP record
+      await OtpModel.deleteOne({ _id: otpRecord._id });
+
+      // Optional: delete user if registration should only succeed when email is sent
+      // await UserModel.deleteOne({ _id: newUser._id });
+    });
 }
 
 //login user
@@ -326,7 +324,6 @@ export async function verifyOtp(req, res) {
 }
 
 export async function resendOtp(req, res) {
-
   const { email } = req.body;
 
   if (!email) {
@@ -356,21 +353,21 @@ export async function resendOtp(req, res) {
     expiresAt: new Date(Date.now() + 10 * 60 * 1000),
   });
 
-  try {
-    await sendemail(email, "OTP VERIFICATION", `Your otp is ${otp}`, html);
+  // Send response immediately
+  res.status(201).json({
+    message: `OTP is being sent to ${email}`,
+    verified: user.verified,
+  });
 
-    return res.status(201).json({
-      message: `otp send to your these email: ${email}`,
-      user,
-      verified: user.verified,
+  // Send email in background
+  sendemail(email, "OTP VERIFICATION", `Your OTP is ${otp}`, html)
+    .then(() => {
+      console.log("OTP email sent");
+    })
+    .catch(async (error) => {
+      console.error(error);
+      await OtpModel.deleteOne({ _id: otpRecord._id });
     });
-  } catch (error) {
-    await OtpModel.deleteOne({ _id: otpRecord._id });
-    return res.status(500).json({
-      message: "Failed to send OTP email.",
-      error: error.message,
-    });
-  }
 }
 
 
