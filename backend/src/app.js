@@ -11,7 +11,7 @@ const app = express()
 const allowedOrigins = [
   config.FRONTEND_URL,
   "http://localhost:4173",
-  "https://your-app.vercel.app"
+  "https://to-do-list-frontend-inky-pi.vercel.app"
 ];
 
 app.use(cors({
