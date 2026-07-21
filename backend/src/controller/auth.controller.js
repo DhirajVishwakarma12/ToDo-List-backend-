@@ -8,13 +8,6 @@ import OtpModel from "../models/otp.model.js";
 import { generateotp, getotphtml } from "../utils/otp.utils.js";
 
 //register user
-import crypto from "crypto";
-import UserModel from "../models/user.model.js";
-import OtpModel from "../models/otp.model.js";
-import { sendemail } from "../utils/sendEmail.js";
-import { generateotp } from "../utils/generateOtp.js";
-import { getotphtml } from "../utils/getOtpHtml.js";
-
 export async function registerUser(req, res) {
   try {
     const { username, email, password } = req.body;
