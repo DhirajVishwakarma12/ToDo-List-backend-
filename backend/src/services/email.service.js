@@ -4,10 +4,8 @@ import config from "../config/config.js"
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
-    pool: true,
-    maxConnections: 5,
     auth: {
-        type: "oauth2",
+        type: "OAuth2",
         user: config.GOOGLE_USER,
         clientId: config.GOOGLE_CLIENT_ID,
         clientSecret: config.GOOGLE_CLIENT_SECRET,
@@ -27,8 +25,6 @@ transporter.verify((error, info) => {
 //function to send email
 export const sendemail = async (to, subject, text, html) => {
     try {
-        console.time("Email Send");
-
         const info = await transporter.sendMail({
             from: `"To Do List" <${config.GOOGLE_USER}>`,
             to,
@@ -37,12 +33,11 @@ export const sendemail = async (to, subject, text, html) => {
             html,
         });
 
-        console.timeEnd("Email Send");
-
-        console.log("Message sent:", info.messageId);
-
+        console.log("Message sent: %s", info.messageId);
+        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
         return info;
     } catch (error) {
         console.error("Error sending the message:", error);
+        throw error;
     }
-};
+}
