@@ -8,63 +8,94 @@ import OtpModel from "../models/otp.model.js";
 import { generateotp, getotphtml } from "../utils/otp.utils.js";
 
 //register user
+import crypto from "crypto";
+import UserModel from "../models/user.model.js";
+import OtpModel from "../models/otp.model.js";
+import { sendemail } from "../utils/sendEmail.js";
+import { generateotp } from "../utils/generateOtp.js";
+import { getotphtml } from "../utils/getOtpHtml.js";
+
 export async function registerUser(req, res) {
-  const { username, email, password } = req.body;
+  try {
+    const { username, email, password } = req.body;
 
-  const existingUser = await UserModel.findOne({
-    $or: [{ username }, { email }],
-  });
-
-  if (existingUser) {
-    return res.status(400).json({
-      message: "User already exists",
+    // Check if user already exists
+    const existingUser = await UserModel.findOne({
+      $or: [{ username }, { email }],
     });
-  }
 
-  const hashpassword = crypto
-    .createHash("sha256")
-    .update(password)
-    .digest("hex");
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User already exists",
+      });
+    }
 
-  const newUser = await UserModel.create({
-    username,
-    email,
-    password: hashpassword,
-    verified: false,
-  });
+    // Hash password
+    const hashpassword = crypto
+      .createHash("sha256")
+      .update(password)
+      .digest("hex");
 
-  // Generate OTP
-  const otp = generateotp();
-  const html = getotphtml(otp);
-  const otphash = crypto.createHash("sha256").update(otp).digest("hex");
+    // Create new user
+    const newUser = await UserModel.create({
+      username,
+      email,
+      password: hashpassword,
+      verified: false,
+    });
 
-  const otpRecord = await OtpModel.create({
-    user: newUser._id,
-    email,
-    otphash,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-  });
+    // Generate OTP
+    const otp = generateotp();
+    const html = getotphtml(otp);
 
-  // Send response immediately
-  res.status(201).json({
-    message: `OTP is being sent to ${email}`,
-    verified: newUser.verified,
-  });
+    // Hash OTP
+    const otphash = crypto
+      .createHash("sha256")
+      .update(otp)
+      .digest("hex");
 
-  // Send email in background
-  sendemail(email, "OTP VERIFICATION", `Your OTP is ${otp}`, html)
-    .then(() => {
-      console.log("OTP email sent successfully");
-    })
-    .catch(async (error) => {
-      console.error("Failed to send OTP:", error);
+    // Save OTP
+    const otpRecord = await OtpModel.create({
+      user: newUser._id,
+      email,
+      otphash,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+    });
 
-      // Delete OTP record
+    try {
+      // Send OTP Email
+      await sendemail(
+        email,
+        "OTP Verification",
+        `Your OTP is ${otp}`,
+        html
+      );
+
+      return res.status(201).json({
+        message: `OTP sent successfully to ${email}`,
+        newUser,
+        verified: newUser.verified,
+      });
+    } catch (error) {
+      // Delete OTP if email sending fails
       await OtpModel.deleteOne({ _id: otpRecord._id });
 
-      // Optional: delete user if registration should only succeed when email is sent
-      // await UserModel.deleteOne({ _id: newUser._id });
+      // Optional: Delete the newly created user as well
+      await UserModel.deleteOne({ _id: newUser._id });
+
+      return res.status(500).json({
+        message: "Failed to send OTP email.",
+        error: error.message,
+      });
+    }
+  } catch (error) {
+    console.error("Register Error:", error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
     });
+  }
 }
 
 //login user
