@@ -8,7 +8,7 @@ const transporter = nodemailer.createTransport({
     maxConnections: 5,
     auth: {
         type: "oauth2",
-        user: config.GOOGEL_USER,
+        user: config.GOOGLE_USER,
         clientId: config.GOOGLE_CLIENT_ID,
         clientSecret: config.GOOGLE_CLIENT_SECRET,
         refreshToken: config.GOOGLE_REFRESH_TOKEN
@@ -30,7 +30,7 @@ export const sendemail = async (to, subject, text, html) => {
         console.time("Email Send");
 
         const info = await transporter.sendMail({
-            from: `"To Do List" <${config.GOOGEL_USER}>`,
+            from: `"To Do List" <${config.GOOGLE_USER}>`,
             to,
             subject,
             text,
