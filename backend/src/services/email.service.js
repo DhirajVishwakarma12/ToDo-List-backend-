@@ -4,6 +4,9 @@ import config from "../config/config.js"
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
+    connectionTimeout: 60000,
+    greetingTimeout: 30000,
+    socketTimeout: 60000,
     auth: {
         type: "OAuth2",
         user: config.GOOGLE_USER,
@@ -34,9 +37,18 @@ export const sendemail = async (to, subject, text, html) => {
         });
 
         console.log("Message sent: %s", info.messageId);
+        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
         return info;
     } catch (error) {
-        console.error("Error sending the message:", error);
-        throw error;
-    }
+    console.error("========== MAIL ERROR ==========");
+    console.error(error);
+    console.error("Message:", error.message);
+    console.error("Code:", error.code);
+    console.error("Command:", error.command);
+    console.error("Response:", error.response);
+    console.error("Stack:", error.stack);
+    console.error("===============================");
+
+    throw error;
 }
+    }
