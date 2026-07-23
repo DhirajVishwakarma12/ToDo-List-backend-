@@ -12,7 +12,6 @@ export async function registerUser(req, res) {
   try {
     const { username, email, password } = req.body;
 
-    // Check if user already exists
     const existingUser = await UserModel.findOne({
       $or: [{ username }, { email }],
     });
@@ -23,13 +22,11 @@ export async function registerUser(req, res) {
       });
     }
 
-    // Hash password
     const hashpassword = crypto
       .createHash("sha256")
       .update(password)
       .digest("hex");
 
-    // Create new user
     const newUser = await UserModel.create({
       username,
       email,
@@ -37,59 +34,50 @@ export async function registerUser(req, res) {
       verified: false,
     });
 
-    // Generate OTP
     const otp = generateotp();
     const html = getotphtml(otp);
 
-    // Hash OTP
     const otphash = crypto
       .createHash("sha256")
       .update(otp)
       .digest("hex");
 
-    // Save OTP
-    const otpRecord = await OtpModel.create({
+    await OtpModel.create({
       user: newUser._id,
       email,
       otphash,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    try {
-      // Send OTP Email
-      await sendemail(
-        email,
-        "OTP Verification",
-        `Your OTP is ${otp}`,
-        html
-      );
+    // ✅ Send response immediately
+    res.status(201).json({
+      message: "Registration successful. OTP is being sent to your email.",
+      verified: false,
+    });
 
-      return res.status(201).json({
-        message: `OTP sent successfully to ${email}`,
-        newUser,
-        verified: newUser.verified,
-      });
-    } catch (error) {
-      // Delete OTP if email sending fails
-      await OtpModel.deleteOne({ _id: otpRecord._id });
+    // ✅ Send email in background
+    sendemail(
+      email,
+      "OTP VERIFICATION",
+      `Your OTP is ${otp}`,
+      html
+    ).catch(async (err) => {
+      console.error("Email sending failed:", err);
 
-      // Optional: Delete the newly created user as well
-      await UserModel.deleteOne({ _id: newUser._id });
+      // Optional cleanup
+      await OtpModel.deleteOne({ email });
+    });
 
-      return res.status(500).json({
-        message: "Failed to send OTP email.",
-        error: error.message,
-      });
-    }
   } catch (error) {
-    console.error("Register Error:", error);
+    console.error(error);
 
     return res.status(500).json({
-      message: "Internal Server Error",
+      message: "Registration failed",
       error: error.message,
     });
   }
 }
+
 
 //login user
 export async function loginUser(req, res) {
