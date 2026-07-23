@@ -3,7 +3,7 @@ import config from "../config/config.js"
 
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    service: "smtp.gmail.com",
     connectionTimeout: 60000,
     greetingTimeout: 30000,
     socketTimeout: 60000,
