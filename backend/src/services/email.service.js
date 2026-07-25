@@ -23,6 +23,7 @@ export const sendemail = async (to, subject, text, html) => {
             service: "gmail",
             port: 465,
             secure: true,
+             requireTLS: true,
             auth: {
                 type: "OAuth2",
                 user: config.GOOGLE_USER,
