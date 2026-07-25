@@ -32,6 +32,9 @@ export const sendemail = async (to, subject, text, html) => {
                 accessToken: accessToken.token,
             },
         });
+            // check the transporter
+            await transporter.verify();
+            console.log("SMTP Connected");
 
         await transporter.sendMail({
             from: config.GOOGLE_USER,
@@ -44,5 +47,10 @@ export const sendemail = async (to, subject, text, html) => {
         console.log("Email sent successfully");
     } catch (err) {
         console.error(err);
+        console.error("Message:", err.message);
+        console.error("Code:", err.code);
+        console.error("Stack:", err.stack);
+        console.error("Response:", err.response);
+        console.error("ResponseCode:", err.responseCode);
     }
 };
