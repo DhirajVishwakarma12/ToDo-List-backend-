@@ -1,3 +1,6 @@
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
+
 import nodemailer from "nodemailer";
 import { google } from "googleapis";
 import config from "../config/config.js";
@@ -14,9 +17,11 @@ oAuth2Client.setCredentials({
 export const sendemail = async (to, subject, text, html) => {
     try {
         const accessToken = await oAuth2Client.getAccessToken();
-
+        console.log(accessToken);
         const transporter = nodemailer.createTransport({
-            service: "gmail",
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false,
             auth: {
                 type: "OAuth2",
                 user: config.GOOGLE_USER,
