@@ -14,15 +14,6 @@ oAuth2Client.setCredentials({
     refresh_token: config.GOOGLE_REFRESH_TOKEN,
 });
 
-console.log("GOOGLE_USER:", config.GOOGLE_USER);
-
-try {
-    await transporter.verify();
-    console.log("SMTP Connected");
-} catch (err) {
-    console.error("VERIFY ERROR:", err);
-    throw err;
-}
 
 export const sendemail = async (to, subject, text, html) => {
     try {
@@ -42,8 +33,15 @@ export const sendemail = async (to, subject, text, html) => {
             },
         });
             // check the transporter
-            await transporter.verify();
-            console.log("SMTP Connected");
+console.log("GOOGLE_USER:", config.GOOGLE_USER);
+
+try {
+    await transporter.verify();
+    console.log("SMTP Connected");
+} catch (err) {
+    console.error("VERIFY ERROR:", err);
+    throw err;
+}
 
         await transporter.sendMail({
             from: config.GOOGLE_USER,
