@@ -14,12 +14,13 @@ oAuth2Client.setCredentials({
     refresh_token: config.GOOGLE_REFRESH_TOKEN,
 });
 
+
 export const sendemail = async (to, subject, text, html) => {
     try {
         const accessToken = await oAuth2Client.getAccessToken();
         console.log(accessToken);
         const transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
+            host: "gmail",
             port: 587,
             secure: false,
             auth: {
