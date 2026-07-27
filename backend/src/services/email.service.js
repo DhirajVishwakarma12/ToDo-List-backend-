@@ -24,7 +24,10 @@ const transporter = nodemailer.createTransport({
     greetingTimeout: 30000,
     socketTimeout: 30000,
 });
-
+dns.lookup("smtp.gmail.com", { all: true }, (err, addresses) => {
+    console.log(err);
+    console.log(addresses);
+});
 //verify the connection configuration
 transporter.verify((error, info) => {
     if (error) {
