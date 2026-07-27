@@ -1,3 +1,6 @@
+import dns from "dns";
+
+dns.setDefaultResultOrder("ipv4first");
 import nodemailer from "nodemailer"
 import config from "../config/config.js"
 
@@ -5,7 +8,8 @@ import config from "../config/config.js"
 const transporter = nodemailer.createTransport({
     service: "gmail",
     port: 587,
-secure: false,
+    secure: false,
+    family: 4,  
     auth: {
         type: "OAuth2",
         user: config.GOOGEL_USER,
