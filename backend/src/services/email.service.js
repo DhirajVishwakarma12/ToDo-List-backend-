@@ -6,18 +6,23 @@ import config from "../config/config.js"
 
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
     port: 587,
     secure: false,
-    family: 4,  
+    requireTLS: true,
+
     auth: {
         type: "OAuth2",
         user: config.GOOGEL_USER,
         clientId: config.GOOGLE_CLIENT_ID,
         clientSecret: config.GOOGLE_CLIENT_SECRET,
-        refreshToken: config.GOOGLE_REFRESH_TOKEN
-    }
-})
+        refreshToken: config.GOOGLE_REFRESH_TOKEN,
+    },
+
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
+});
 
 //verify the connection configuration
 transporter.verify((error, info) => {
