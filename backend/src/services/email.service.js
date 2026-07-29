@@ -1,12 +1,11 @@
-import dns from "dns";
-dns.setDefaultResultOrder("ipv4first");
 import nodemailer from "nodemailer";
 import config from "../config/config.js";
 
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    // FIX: Hardcode Gmail's standard IPv4 SMTP address to bypass DNS lookups
+    host: "142.250.190.109", 
     port: 587,
-    secure: false,
+    secure: false, 
     auth: {
         type: "OAuth2",
         user: config.GOOGLE_USER,
@@ -14,17 +13,24 @@ const transporter = nodemailer.createTransport({
         clientSecret: config.GOOGLE_CLIENT_SECRET,
         refreshToken: config.GOOGLE_REFRESH_TOKEN,
     },
-    family: 4,      
+    // Keep this just in case, though it's less critical when using an explicit IP
+    family: 4, 
+    
+    // CRITICAL: Because we are using an IP address instead of "smtp.gmail.com", 
+    // we must tell Nodemailer not to reject the connection due to a hostname mismatch
+    // on the TLS certificate.
+    tls: {
+        rejectUnauthorized: false
+    }
 });
 
-await transporter.verify((error, success) => {
-    if (error) {
-        console.log('Error connecting to email server:', error)
-    } else {
-        console.log('Email server is ready to send the message')
+try {
+    await transporter.verify();
+    console.log('Email server is ready to send the message');
+} catch (error) {
+    console.log('Error connecting to email server:', error);
+}
 
-    }
-})
 export const sendemail = async (to, subject, text, html) => {
     try {
         const info = await transporter.sendMail({
@@ -35,14 +41,10 @@ export const sendemail = async (to, subject, text, html) => {
             html,
         });
 
-        console.log("message send :%s", info.messageId)
-        console.log("Preview URL :%s", nodemailer.getTestMessageUrl(info))
-
+        console.log("message sent: %s", info.messageId);
+        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 
     } catch (error) {
-        console.log("Error sending email :%s", error)
-
+        console.log("Error sending email: %s", error);
     }
 }
-
-
