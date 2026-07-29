@@ -258,7 +258,11 @@ export async function logoutUser(req, res) {
   session.revoked = true;
   await session.save();
 
-  res.clearCookie("refreshtoken");
+  res.clearCookie("refreshtoken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
 
   res.status(200).json({
     message: "User logged out successfully",
