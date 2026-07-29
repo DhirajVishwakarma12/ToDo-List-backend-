@@ -5,8 +5,8 @@ import config from "../config/config.js";
 
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: fasle,
     auth: {
         type: "OAuth2",
         user: config.GOOGLE_USER,
