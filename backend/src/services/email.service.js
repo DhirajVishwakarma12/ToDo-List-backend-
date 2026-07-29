@@ -1,50 +1,55 @@
-import nodemailer from "nodemailer";
+import { google } from "googleapis";
 import config from "../config/config.js";
 
-const transporter = nodemailer.createTransport({
-    // FIX: Hardcode Gmail's standard IPv4 SMTP address to bypass DNS lookups
-    host: "142.250.190.109", 
-    port: 587,
-    secure: false, 
-    auth: {
-        type: "OAuth2",
-        user: config.GOOGLE_USER,
-        clientId: config.GOOGLE_CLIENT_ID,
-        clientSecret: config.GOOGLE_CLIENT_SECRET,
-        refreshToken: config.GOOGLE_REFRESH_TOKEN,
-    },
-    // Keep this just in case, though it's less critical when using an explicit IP
-    family: 4, 
-    
-    // CRITICAL: Because we are using an IP address instead of "smtp.gmail.com", 
-    // we must tell Nodemailer not to reject the connection due to a hostname mismatch
-    // on the TLS certificate.
-    tls: {
-        rejectUnauthorized: false
-    }
+// OAuth2 Client setup karein
+const OAuth2 = google.auth.OAuth2;
+const oauth2Client = new OAuth2(
+    config.GOOGLE_CLIENT_ID,
+    config.GOOGLE_CLIENT_SECRET,
+    "https://developers.google.com/oauthplayground" // Standard redirect URI
+);
+
+// Apna refresh token set karein
+oauth2Client.setCredentials({
+    refresh_token: config.GOOGLE_REFRESH_TOKEN,
 });
 
-try {
-    await transporter.verify();
-    console.log('Email server is ready to send the message');
-} catch (error) {
-    console.log('Error connecting to email server:', error);
-}
+// Gmail API initialize karein
+const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
 export const sendemail = async (to, subject, text, html) => {
     try {
-        const info = await transporter.sendMail({
-            from: `"To Do List" <${config.GOOGLE_USER}>`,
-            to,
-            subject,
-            text,
-            html,
+        // Raw email format banayein
+        const emailLines = [
+            `From: "To Do List" <${config.GOOGLE_USER}>`,
+            `To: ${to}`,
+            `Subject: ${subject}`,
+            `Content-Type: text/html; charset="UTF-8"`,
+            `MIME-Version: 1.0`,
+            ``, // Header aur body ke beech khali line zaroori hai
+            html || text,
+        ];
+
+        const email = emailLines.join("\r\n");
+
+        // Gmail API ko base64 (URL safe) format mein data chahiye hota hai
+        const base64EncodedEmail = Buffer.from(email)
+            .toString("base64")
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=+$/, "");
+
+        // API ke through email send karein (Bypasses SMTP completely)
+        const response = await gmail.users.messages.send({
+            userId: "me",
+            requestBody: {
+                raw: base64EncodedEmail,
+            },
         });
 
-        console.log("message sent: %s", info.messageId);
-        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+        console.log("Message sent successfully via Gmail API! ID: %s", response.data.id);
 
     } catch (error) {
-        console.log("Error sending email: %s", error);
+        console.log("Error sending email via API:", error.message);
     }
-}
+};
