@@ -261,7 +261,7 @@ export async function logoutUser(req, res) {
   res.clearCookie("refreshtoken", {
     httpOnly: true,
     secure: true,
-    sameSite: "none",
+    sameSite: "None",
   });
 
   res.status(200).json({
