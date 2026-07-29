@@ -5,7 +5,8 @@ import config from "../config/config.js";
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
-    family: 4,      
+    port: 465,
+    secure: true,
     auth: {
         type: "OAuth2",
         user: config.GOOGLE_USER,
@@ -13,6 +14,7 @@ const transporter = nodemailer.createTransport({
         clientSecret: config.GOOGLE_CLIENT_SECRET,
         refreshToken: config.GOOGLE_REFRESH_TOKEN,
     },
+    family: 4,      
 });
 
 await transporter.verify((error, success) => {
